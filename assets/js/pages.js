@@ -1,4 +1,4 @@
-if (location.protocol !== 'https:' && location.hostname !== "localhost") { //force https
+if (location.protocol !== 'https:' && location.hostname !== "localhost" && location.hostname !== "tadpole-homepage.test") { //force https
     location.replace(`https:${location.href.substring(location.protocol.length)}`);
 }
 

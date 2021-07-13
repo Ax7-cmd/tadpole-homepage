@@ -1,3 +1,7 @@
+if (location.protocol !== 'https:' && location.hostname !== "localhost") { //force https
+    location.replace(`https:${location.href.substring(location.protocol.length)}`);
+}
+
 $(document).ready(function () {
     var canvs = document.getElementById("fishHolder");
     canvs.width = window.innerWidth;

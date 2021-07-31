@@ -57,6 +57,64 @@ var _MAINNET_ENV = {
     }
 }
 
+var MARKETS = {
+    "markets": {
+        "totalSupplyVal": {
+            "inUSD": 0,
+        },
+        "totalBorrowsVal": {
+            "inUSD": 0,
+        },
+    },
+    "cToken": {
+        "tad": {
+            "getCash": 0,
+            "totalBorrows": 0,
+            "totalReserves": 0,
+            "coingeckoUrl": "https://api.coingecko.com/api/v3/coins/tadpole-finance?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false",
+            "priceUSD": 0,
+            "totalSupplyVal": {
+                "decimalValue": 0,
+                "inUSD": 0,
+            },
+            "totalBorrowsVal": {
+                "decimalValue": 0,
+                "inUSD": 0,
+            },
+        },
+        "usdt": {
+            "getCash": 0,
+            "totalBorrows": 0,
+            "totalReserves": 0,
+            "coingeckoUrl": "https://api.coingecko.com/api/v3/coins/tether?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false",
+            "priceUSD": 0,
+            "totalSupplyVal": {
+                "decimalValue": 0,
+                "inUSD": 0,
+            },
+            "totalBorrowsVal": {
+                "decimalValue": 0,
+                "inUSD": 0,
+            },
+        },
+        "bnb": {
+            "getCash": 0,
+            "totalBorrows": 0,
+            "totalReserves": 0,
+            "coingeckoUrl": "https://api.coingecko.com/api/v3/coins/binancecoin?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false",
+            "priceUSD": 0,
+            "totalSupplyVal": {
+                "decimalValue": 0,
+                "inUSD": 0,
+            },
+            "totalBorrowsVal": {
+                "decimalValue": 0,
+                "inUSD": 0,
+            },
+        },
+    },
+};
+
 var ENV = _MAINNET_ENV;
 var OLD_ENVID;
 
@@ -86,6 +144,71 @@ var syncRate = function () {
         $('.' + cToken.id + '-apy').html(supplyApy.toFixed(2));
     });
 }
+
+var syncMarkets = async function () {
+    ENV = _MAINNET_ENV;
+    var i = 0;
+    Object.values(ENV.cTokens).forEach(async function (cToken, index) {
+        var getCash = await cToken.contract.methods.getCash().call();
+        var totalBorrows = await cToken.contract.methods.totalBorrows().call();
+        var totalReserves = await cToken.contract.methods.totalReserves().call();
+
+        // ===========
+        MARKETS.cToken[cToken.id].getCash = getCash;
+        MARKETS.cToken[cToken.id].totalBorrows = totalBorrows;
+        MARKETS.cToken[cToken.id].totalReserves = totalReserves;
+        MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue = ((getCash/(10**18)) + (totalBorrows/(10**18)) - (totalReserves/(10**18)));
+        MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue = (totalBorrows/(10**18));
+
+        // ===== coingecko api
+        let response = await new Promise(resolve => {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", MARKETS.cToken[cToken.id].coingeckoUrl, true);
+            xhr.onload = function(e) {
+              resolve(JSON.parse(xhr.response));
+            };
+            xhr.onerror = function () {
+              resolve(undefined);
+              console.error("** An error occurred during the XMLHttpRequest");
+            };
+            xhr.send();
+        });
+        MARKETS.cToken[cToken.id].priceUSD = response.market_data.current_price.usd;
+        MARKETS.cToken[cToken.id].totalSupplyVal.inUSD = MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
+        MARKETS.cToken[cToken.id].totalBorrowsVal.inUSD = MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
+        MARKETS.markets.totalSupplyVal.inUSD = MARKETS.cToken.tad.totalSupplyVal.inUSD + MARKETS.cToken.usdt.totalSupplyVal.inUSD + MARKETS.cToken.bnb.totalSupplyVal.inUSD;
+        MARKETS.markets.totalBorrowsVal.inUSD = MARKETS.cToken.tad.totalBorrowsVal.inUSD + MARKETS.cToken.usdt.totalBorrowsVal.inUSD + MARKETS.cToken.bnb.totalBorrowsVal.inUSD;
+
+        i++;
+        if(i == 3){
+            $('.markets-total-supply-usd').html('$' + MARKETS.markets.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+            $('.markets-total-borrows-usd').html('$' + MARKETS.markets.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+            let tadSupply = Math.round(((MARKETS.cToken.tad.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
+            let tadBorrows = Math.round(((MARKETS.cToken.tad.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
+            let usdtSupply = Math.round(((MARKETS.cToken.usdt.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
+            let usdtBorrows = Math.round(((MARKETS.cToken.usdt.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
+            let bnbSupply = Math.round(((MARKETS.cToken.bnb.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
+            let bnbBorrows = Math.round(((MARKETS.cToken.bnb.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
+
+            $('.percent-supply-tad').html(tadSupply + '%');
+            $('.percent-supply-usdt').html(usdtSupply + '%');
+            $('.percent-supply-bnb').html(bnbSupply + '%');
+            $('.percent-borrows-tad').html(tadBorrows + '%');
+            $('.percent-borrows-usdt').html(usdtBorrows + '%');
+            $('.percent-borrows-bnb').html(bnbBorrows + '%');
+            
+            $('.progress-supply-tad').attr('style', 'width: '+tadSupply+'%;');
+            $('.progress-supply-usdt').attr('style', 'width: '+usdtSupply+'%;');
+            $('.progress-supply-bnb').attr('style', 'width: '+bnbSupply+'%;');
+            $('.progress-borrows-tad').attr('style', 'width: '+tadBorrows+'%;');
+            $('.progress-borrows-usdt').attr('style', 'width: '+usdtBorrows+'%;');
+            $('.progress-borrows-bnb').attr('style', 'width: '+bnbBorrows+'%;');
+
+            $('.loading-progress-markets').hide();
+        }
+    });
+}
+
 $(document).ready(function () {
     syncCont();
     syncRate();

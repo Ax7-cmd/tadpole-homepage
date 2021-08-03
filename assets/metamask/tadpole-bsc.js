@@ -140,8 +140,11 @@ var syncRate = function () {
     Object.values(ENV.cTokens).forEach(async function (cToken, index) {
 
         var supplyRatePerBlock = await cToken.contract.methods.supplyRatePerBlock().call();
+		var borrowRatePerBlock = await cToken.contract.methods.borrowRatePerBlock().call();
         var supplyApy = (((Math.pow((supplyRatePerBlock / mentissa * blocksPerDay) + 1, daysPerYear - 1))) - 1) * 100;
+		var borrowApy = (((Math.pow((borrowRatePerBlock / mentissa * blocksPerDay) + 1, daysPerYear - 1))) - 1) * 100;
         $('.' + cToken.id + '-apy').html(supplyApy.toFixed(2));
+        $('.' + cToken.id + '-borrow-rate').html(borrowApy.toFixed(2));
     });
 }
 

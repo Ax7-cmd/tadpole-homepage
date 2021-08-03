@@ -49,6 +49,12 @@
     <script src="../assets/metamask/tadpole-bsc.js?1"></script>
 
     <!-- ===============================================-->
+    <!--    Bootstrap Js-->
+    <!-- ===============================================-->
+    <link rel="stylesheet" href="../assets/bootstrap-4.0.0-dist/css/bootstrap.min.css">
+    <script src="../assets/bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+
+    <!-- ===============================================-->
     <!--    Stylesheets-->
     <!-- ===============================================-->
     <link href="../assets/css/theme.css" rel="stylesheet" />
@@ -65,7 +71,8 @@
             style="background-image: none; background-color: rgba(255, 255, 255, 0.9);">
             <div class="container" style="padding: 0;">
                 <a class="navbar-brand d-flex align-items-center fw-bold fs-2" href="/">
-                    <img class="img-fluid" src="../assets/img/icons/Logo-tadpole.png" width="211" alt="TadpoleFinance" />
+                    <img class="img-fluid" src="../assets/img/icons/Logo-tadpole.png" width="211"
+                        alt="TadpoleFinance" />
                 </a>
                 <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -76,13 +83,33 @@
                         <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
                                 href="/">Home</a></li>
                         <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/bridge.html" target="blank">Bridge</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/liquidation.html" target="blank">Liquidation</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/genesis.html" target="blank">Genesis Mining</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/staking.html" target="blank">Stake</a></li>
+                                href="/markets">Markets</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link fw-medium text-nowrap dropdown-toggle" href="#"
+                                id="productsDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                Products
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="productsDropdownMenuLink">
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/bridge.html">Bridge</a>
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/liquidation.html">Liquidation</a>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link fw-medium text-nowrap dropdown-toggle" href="#"
+                                id="programsDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                Programs
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="programsDropdownMenuLink">
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/genesis.html">Genesis Mining</a>
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/staking.html">Stake</a>
+                            </div>
+                        </li>
                         <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
                                 href="https://doc.tadpole.finance" target="blank">Docs</a></li>
                         <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
@@ -129,7 +156,8 @@
                                                 <span class="text-success fw-bold percent-supply-usdt">0%</span>
                                             </div>
                                             <div class="progress">
-                                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated progress-supply-usdt" role="progressbar" style="width: 0%;"></div>
+                                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated progress-supply-usdt"
+                                                    role="progressbar" style="width: 0%;"></div>
                                             </div>
                                         </div>
                                         <div class="pt-2">
@@ -138,7 +166,8 @@
                                                 <span class="text-success fw-bold percent-supply-tad">0%</span>
                                             </div>
                                             <div class="progress">
-                                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated progress-supply-tad" role="progressbar" style="width: 0%;"></div>
+                                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated progress-supply-tad"
+                                                    role="progressbar" style="width: 0%;"></div>
                                             </div>
                                         </div>
                                         <div class="pt-2">
@@ -147,7 +176,8 @@
                                                 <span class="text-success fw-bold percent-supply-bnb">0%</span>
                                             </div>
                                             <div class="progress">
-                                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated progress-supply-bnb" role="progressbar" style="width: 0%;"></div>
+                                                <div class="progress-bar bg-success progress-bar-striped progress-bar-animated progress-supply-bnb"
+                                                    role="progressbar" style="width: 0%;"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -170,7 +200,8 @@
                                                 <span class="text-primary fw-bold percent-borrows-usdt">0%</span>
                                             </div>
                                             <div class="progress">
-                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated progress-borrows-usdt" role="progressbar" style="width: 0%;"></div>
+                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated progress-borrows-usdt"
+                                                    role="progressbar" style="width: 0%;"></div>
                                             </div>
                                         </div>
                                         <div class="pt-2">
@@ -179,7 +210,8 @@
                                                 <span class="text-primary fw-bold percent-borrows-tad">0%</span>
                                             </div>
                                             <div class="progress">
-                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated progress-borrows-tad" role="progressbar" style="width: 0%;"></div>
+                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated progress-borrows-tad"
+                                                    role="progressbar" style="width: 0%;"></div>
                                             </div>
                                         </div>
                                         <div class="pt-2">
@@ -188,7 +220,8 @@
                                                 <span class="text-primary fw-bold percent-borrows-bnb">0%</span>
                                             </div>
                                             <div class="progress">
-                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated progress-borrows-bnb" role="progressbar" style="width: 0%;"></div>
+                                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated progress-borrows-bnb"
+                                                    role="progressbar" style="width: 0%;"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -236,7 +269,7 @@
                                 <ul><a class="text-light text-decoration-none" href="https://t.me/TadpoleFinanceChannel"
                                         target="blank">Telegram Channel</a></ul>
                                 <ul><a class="text-light text-decoration-none" href="https://t.me/TadpoleFinance"
-                                        target="blank">Telegramgit 
+                                        target="blank">Telegramgit
                                         Group</a></ul>
                                 <ul><a class="text-light text-decoration-none" href="https://twitter.com/TadpoleFinance"
                                         target="blank">Twitter</a></ul>

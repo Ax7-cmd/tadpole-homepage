@@ -50,6 +50,12 @@
     <script src="../assets/metamask/tadpole-bsc.js?1"></script>
 
     <!-- ===============================================-->
+    <!--    Bootstrap Js-->
+    <!-- ===============================================-->
+    <link rel="stylesheet" href="../assets/bootstrap-4.0.0-dist/css/bootstrap.min.css">
+    <script src="../assets/bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+
+    <!-- ===============================================-->
     <!--    Stylesheets-->
     <!-- ===============================================-->
     <link href="../assets/css/theme.css" rel="stylesheet" />
@@ -65,7 +71,8 @@
             style="background-image: none; background-color: rgba(255, 255, 255, 0.9);">
             <div class="container" style="padding: 0;">
                 <a class="navbar-brand d-flex align-items-center fw-bold fs-2" href="/id">
-                    <img class="img-fluid" src="../assets/img/icons/Logo-tadpole.png" width="211" alt="TadpoleFinance" />
+                    <img class="img-fluid" src="../assets/img/icons/Logo-tadpole.png" width="211"
+                        alt="TadpoleFinance" />
                 </a>
                 <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
@@ -75,23 +82,43 @@
                     <ul class="navbar-nav ms-auto pt-2 pt-lg-0">
                         <li class="nav-item" data-anchor="data-anchor"><a class="nav-link fw-medium text-nowrap"
                                 href="#home">Home</a></li>
+                        <li class="nav-item active"><a class="nav-link fw-medium text-nowrap"
+                                href="/markets">Markets</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link fw-medium text-nowrap dropdown-toggle" href="#"
+                                id="productsDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                Products
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="productsDropdownMenuLink">
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/bridge.html">Bridge</a>
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/liquidation.html">Liquidation</a>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link fw-medium text-nowrap dropdown-toggle" href="#"
+                                id="programsDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                                Programs
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="programsDropdownMenuLink">
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/genesis.html">Genesis Mining</a>
+                                <a class="dropdown-item fw-medium text-nowrap"
+                                    href="https://app.tadpole.finance/staking.html">Stake</a>
+                            </div>
+                        </li>
                         <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/bridge.html" target="blank">Bridge</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/liquidation.html" target="blank">Liquidation</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/genesis.html" target="blank">Genesis Mining</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
-                                href="https://app.tadpole.finance/staking.html" target="blank">Stake</a></li>
-                        <li class="nav-item"><a class="nav-link fw-medium text-nowrap" href="https://doc.tadpole.finance"
-                                target="blank">Docs</a></li>
+                                href="https://doc.tadpole.finance" target="blank">Docs</a></li>
                         <li class="nav-item"><a class="nav-link fw-medium text-nowrap"
                                 href="https://v2.info.uniswap.org/token/0x9f7229af0c4b9740e207ea283b9094983f78ba04"
                                 target="blank">Uniswap</a>
                     </ul>
                     <div class="mb-1 ps-lg-1">
-                        <a class="btn btn-lg btn-success rounded-pill order-0 text-nowrap" href="https://app.tadpole.finance"
-                            target="blank">Saving & Lending</a>
+                        <a class="btn btn-lg btn-success rounded-pill order-0 text-nowrap"
+                            href="https://app.tadpole.finance" target="blank">Saving & Lending</a>
                     </div>
                     <div class="mb-1 ps-lg-4">
                         <select class="form-select select-lang" data-selected="id">
@@ -157,9 +184,27 @@
                                     src="../assets/img/illustrations/tadpole-logo-icon.png" width="90" alt="" />
                             </div>
                             <h5 class="text-center fw-bold text-success">TAD</h5>
-                            <p class="text-center mt-2 mb-0 text-dark">(APY)<br class="d-none d-xl-block">
-                                <span class="tad-apy">0</span>%
-                            </p>
+                            <div class="row justify-content-center">
+                                <div class="col-md">
+                                    <div class="card shadow border-0">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md text-center border-right">
+                                                    <p class="m-0 text-dark">(APY)<br class="d-none d-xl-block">
+                                                        <span class="tad-apy">0</span>%
+                                                    </p>
+                                                </div>
+                                                <div class="col-md text-center">
+                                                    <p class="m-0 text-dark text-nowrap">(Borrow Rate)<br
+                                                            class="d-none d-xl-block">
+                                                        <span class="tad-borrow-rate">0</span>%
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </a>
                     </div>
                     <div class="col-md">
@@ -168,9 +213,27 @@
                                     src="../assets/img/illustrations/bnb-logo-icon.png" width="90" alt="" />
                             </div>
                             <h5 class="text-center fw-bold text-warning">BNB</h5>
-                            <p class="text-center mt-2 mb-0 text-dark">(APY)<br class="d-none d-xl-block">
-                                <span class="bnb-apy">0</span>%
-                            </p>
+                            <div class="row justify-content-center">
+                                <div class="col-md">
+                                    <div class="card shadow border-0">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md text-center border-right">
+                                                    <p class="m-0 text-dark">(APY)<br class="d-none d-xl-block">
+                                                        <span class="bnb-apy">0</span>%
+                                                    </p>
+                                                </div>
+                                                <div class="col-md text-center">
+                                                    <p class="m-0 text-dark text-nowrap">(Borrow Rate)<br
+                                                            class="d-none d-xl-block">
+                                                        <span class="bnb-borrow-rate">0</span>%
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </a>
                     </div>
                     <div class="col-md">
@@ -179,9 +242,27 @@
                                     src="../assets/img/illustrations/usdt-logo-icon.png" width="90" alt="" />
                             </div>
                             <h5 class="text-center fw-bold text-success">USDT</h5>
-                            <p class="text-center mt-2 mb-0 text-dark">(APY)<br class="d-none d-xl-block">
-                                <span class="usdt-apy">0</span>%
-                            </p>
+                            <div class="row justify-content-center">
+                                <div class="col-md">
+                                    <div class="card shadow border-0">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md text-center border-right">
+                                                    <p class="m-0 text-dark">(APY)<br class="d-none d-xl-block">
+                                                        <span class="usdt-apy">0</span>%
+                                                    </p>
+                                                </div>
+                                                <div class="col-md text-center">
+                                                    <p class="m-0 text-dark text-nowrap">(Borrow Rate)<br
+                                                            class="d-none d-xl-block">
+                                                        <span class="usdt-borrow-rate">0</span>%
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </a>
                     </div>
                 </div>

@@ -193,6 +193,13 @@ var syncMarkets = async function () {
             let bnbSupply = Math.round(((MARKETS.cToken.bnb.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
             let bnbBorrows = Math.round(((MARKETS.cToken.bnb.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
 
+            $('.usd-supply-tad').html('TAD ($' + MARKETS.cToken.tad.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-supply-usdt').html('USDT ($' + MARKETS.cToken.usdt.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-supply-bnb').html('BNB ($' + MARKETS.cToken.bnb.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-borrows-tad').html('TAD ($' + MARKETS.cToken.tad.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-borrows-usdt').html('USDT ($' + MARKETS.cToken.usdt.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-borrows-bnb').html('BNB ($' + MARKETS.cToken.bnb.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+
             $('.percent-supply-tad').html(tadSupply + '%');
             $('.percent-supply-usdt').html(usdtSupply + '%');
             $('.percent-supply-bnb').html(bnbSupply + '%');
@@ -208,6 +215,48 @@ var syncMarkets = async function () {
             $('.progress-borrows-bnb').attr('style', 'width: '+bnbBorrows+'%;');
 
             $('.loading-progress-markets').hide();
+        }
+    });
+}
+
+var getTLV = async function () {
+    ENV = _MAINNET_ENV;
+    var i = 0;
+    Object.values(ENV.cTokens).forEach(async function (cToken, index) {
+        var getCash = await cToken.contract.methods.getCash().call();
+        var totalBorrows = await cToken.contract.methods.totalBorrows().call();
+        var totalReserves = await cToken.contract.methods.totalReserves().call();
+
+        // ===========
+        MARKETS.cToken[cToken.id].getCash = getCash;
+        MARKETS.cToken[cToken.id].totalBorrows = totalBorrows;
+        MARKETS.cToken[cToken.id].totalReserves = totalReserves;
+        MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue = ((getCash/(10**18)) + (totalBorrows/(10**18)) - (totalReserves/(10**18)));
+        MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue = (totalBorrows/(10**18));
+
+        // ===== coingecko api
+        let response = await new Promise(resolve => {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", MARKETS.cToken[cToken.id].coingeckoUrl, true);
+            xhr.onload = function(e) {
+              resolve(JSON.parse(xhr.response));
+            };
+            xhr.onerror = function () {
+              resolve(undefined);
+              console.error("** An error occurred during the XMLHttpRequest");
+            };
+            xhr.send();
+        });
+        MARKETS.cToken[cToken.id].priceUSD = response.market_data.current_price.usd;
+        MARKETS.cToken[cToken.id].totalSupplyVal.inUSD = MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
+        MARKETS.cToken[cToken.id].totalBorrowsVal.inUSD = MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
+        MARKETS.markets.totalSupplyVal.inUSD = MARKETS.cToken.tad.totalSupplyVal.inUSD + MARKETS.cToken.usdt.totalSupplyVal.inUSD + MARKETS.cToken.bnb.totalSupplyVal.inUSD;
+        MARKETS.markets.totalBorrowsVal.inUSD = MARKETS.cToken.tad.totalBorrowsVal.inUSD + MARKETS.cToken.usdt.totalBorrowsVal.inUSD + MARKETS.cToken.bnb.totalBorrowsVal.inUSD;
+
+        i++;
+        if(i == 3){
+            let tvl = MARKETS.markets.totalSupplyVal.inUSD + MARKETS.markets.totalBorrowsVal.inUSD;
+            $('.tvl-value').html('$' + tvl.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
         }
     });
 }

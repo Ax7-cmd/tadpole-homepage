@@ -1,20 +1,8 @@
-var BN = web3.utils.BN;
+const blocksPerDay = 12 * 60 * 24;
+const daysPerYear = 365;
+const mentissa = 1e18;
 
-var accountBalance = new Object();
-var accountBorrow = new Object();
-var prices = new Object();
-var enableCollateral = new Object();
-var assetsIn;
-var accountLiquidityAvailable;
-const gasLimitStake = 300000;
-const gasLimitApprove = 70000;
-
-var formatter = new Intl.NumberFormat('us-US', {
-    style: 'currency',
-    currency: 'USD',
-});
-
-var _MAINNET_ENV = {
+var _BSC_ENV_BSC = {
     "id": 1,
     "comptrollerAddress": "0x8Cb331D8F117a5C914fd0f2579321572A27bf191",
     "oracleAddress": "0x2E0490c8fd2b23cB323370bb7958204A23504AaC",
@@ -57,7 +45,7 @@ var _MAINNET_ENV = {
     }
 }
 
-var MARKETS = {
+var MARKET_BSC = {
     "markets": {
         "totalSupplyVal": {
             "inUSD": 0,
@@ -114,31 +102,24 @@ var MARKETS = {
         },
     },
 };
-
-var ENV = _MAINNET_ENV;
-var OLD_ENVID;
+var ENV_BSC_BSC = _BSC_ENV_BSC;
+// ----------------------------
 
 var syncCont = function () {
+    ENV_BSC = _BSC_ENV_BSC;
+    ENV_BSC.comptrollerContract = new web3BSC.eth.Contract(comptrollerAbi, ENV_BSC.comptrollerAddress);
+    ENV_BSC.oracleContract = new web3BSC.eth.Contract(oracleAbi, ENV_BSC.oracleAddress);
 
-    ENV = _MAINNET_ENV;
-
-    ENV.comptrollerContract = new web3.eth.Contract(comptrollerAbi, ENV.comptrollerAddress);
-    ENV.oracleContract = new web3.eth.Contract(oracleAbi, ENV.oracleAddress);
-    Object.values(ENV.cTokens).forEach(async function (cToken, index) {
-        if (cToken.id == 'bnb') ENV.cTokens[cToken.id].contract = new web3.eth.Contract(cEtherAbi, cToken.address);
-        else ENV.cTokens[cToken.id].contract = new web3.eth.Contract(cErc20Abi, cToken.address);
+    Object.values(ENV_BSC.cTokens).forEach(async function (cToken, index) {
+        if (cToken.id == 'bnb') ENV_BSC.cTokens[cToken.id].contract = new web3BSC.eth.Contract(cEtherAbi, cToken.address);
+        else ENV_BSC.cTokens[cToken.id].contract = new web3BSC.eth.Contract(cErc20Abi, cToken.address);
     });
 }
 
-const blocksPerDay = 12 * 60 * 24;
-const daysPerYear = 365;
-const mentissa = 1e18;
-
 var syncRate = function () {
+    ENV_BSC = _BSC_ENV_BSC;
 
-    ENV = _MAINNET_ENV;
-    Object.values(ENV.cTokens).forEach(async function (cToken, index) {
-
+    Object.values(ENV_BSC.cTokens).forEach(async function (cToken, index) {
         var supplyRatePerBlock = await cToken.contract.methods.supplyRatePerBlock().call();
 		var borrowRatePerBlock = await cToken.contract.methods.borrowRatePerBlock().call();
         var supplyApy = (((Math.pow((supplyRatePerBlock / mentissa * blocksPerDay) + 1, daysPerYear - 1))) - 1) * 100;
@@ -149,24 +130,25 @@ var syncRate = function () {
 }
 
 var syncMarkets = async function () {
-    ENV = _MAINNET_ENV;
+    ENV_BSC = _BSC_ENV_BSC;
     var i = 0;
-    Object.values(ENV.cTokens).forEach(async function (cToken, index) {
+
+    Object.values(ENV_BSC.cTokens).forEach(async function (cToken, index) {
         var getCash = await cToken.contract.methods.getCash().call();
         var totalBorrows = await cToken.contract.methods.totalBorrows().call();
         var totalReserves = await cToken.contract.methods.totalReserves().call();
 
         // ===========
-        MARKETS.cToken[cToken.id].getCash = getCash;
-        MARKETS.cToken[cToken.id].totalBorrows = totalBorrows;
-        MARKETS.cToken[cToken.id].totalReserves = totalReserves;
-        MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue = ((getCash/(10**18)) + (totalBorrows/(10**18)) - (totalReserves/(10**18)));
-        MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue = (totalBorrows/(10**18));
+        MARKET_BSC.cToken[cToken.id].getCash = getCash;
+        MARKET_BSC.cToken[cToken.id].totalBorrows = totalBorrows;
+        MARKET_BSC.cToken[cToken.id].totalReserves = totalReserves;
+        MARKET_BSC.cToken[cToken.id].totalSupplyVal.decimalValue = ((getCash/(10**18)) + (totalBorrows/(10**18)) - (totalReserves/(10**18)));
+        MARKET_BSC.cToken[cToken.id].totalBorrowsVal.decimalValue = (totalBorrows/(10**18));
 
         // ===== coingecko api
         let response = await new Promise(resolve => {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", MARKETS.cToken[cToken.id].coingeckoUrl, true);
+            xhr.open("GET", MARKET_BSC.cToken[cToken.id].coingeckoUrl, true);
             xhr.onload = function(e) {
               resolve(JSON.parse(xhr.response));
             };
@@ -176,29 +158,29 @@ var syncMarkets = async function () {
             };
             xhr.send();
         });
-        MARKETS.cToken[cToken.id].priceUSD = response.market_data.current_price.usd;
-        MARKETS.cToken[cToken.id].totalSupplyVal.inUSD = MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
-        MARKETS.cToken[cToken.id].totalBorrowsVal.inUSD = MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
-        MARKETS.markets.totalSupplyVal.inUSD = MARKETS.cToken.tad.totalSupplyVal.inUSD + MARKETS.cToken.usdt.totalSupplyVal.inUSD + MARKETS.cToken.bnb.totalSupplyVal.inUSD;
-        MARKETS.markets.totalBorrowsVal.inUSD = MARKETS.cToken.tad.totalBorrowsVal.inUSD + MARKETS.cToken.usdt.totalBorrowsVal.inUSD + MARKETS.cToken.bnb.totalBorrowsVal.inUSD;
+        MARKET_BSC.cToken[cToken.id].priceUSD = response.market_data.current_price.usd;
+        MARKET_BSC.cToken[cToken.id].totalSupplyVal.inUSD = MARKET_BSC.cToken[cToken.id].totalSupplyVal.decimalValue * MARKET_BSC.cToken[cToken.id].priceUSD;
+        MARKET_BSC.cToken[cToken.id].totalBorrowsVal.inUSD = MARKET_BSC.cToken[cToken.id].totalBorrowsVal.decimalValue * MARKET_BSC.cToken[cToken.id].priceUSD;
+        MARKET_BSC.markets.totalSupplyVal.inUSD = MARKET_BSC.cToken.tad.totalSupplyVal.inUSD + MARKET_BSC.cToken.usdt.totalSupplyVal.inUSD + MARKET_BSC.cToken.bnb.totalSupplyVal.inUSD;
+        MARKET_BSC.markets.totalBorrowsVal.inUSD = MARKET_BSC.cToken.tad.totalBorrowsVal.inUSD + MARKET_BSC.cToken.usdt.totalBorrowsVal.inUSD + MARKET_BSC.cToken.bnb.totalBorrowsVal.inUSD;
 
         i++;
         if(i == 3){
-            $('.markets-total-supply-usd').html('$' + MARKETS.markets.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-            $('.markets-total-borrows-usd').html('$' + MARKETS.markets.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-            let tadSupply = Math.round(((MARKETS.cToken.tad.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
-            let tadBorrows = Math.round(((MARKETS.cToken.tad.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
-            let usdtSupply = Math.round(((MARKETS.cToken.usdt.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
-            let usdtBorrows = Math.round(((MARKETS.cToken.usdt.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
-            let bnbSupply = Math.round(((MARKETS.cToken.bnb.totalSupplyVal.inUSD/MARKETS.markets.totalSupplyVal.inUSD)*100));
-            let bnbBorrows = Math.round(((MARKETS.cToken.bnb.totalBorrowsVal.inUSD/MARKETS.markets.totalBorrowsVal.inUSD)*100));
+            $('.markets-total-supply-usd').html('$' + MARKET_BSC.markets.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+            $('.markets-total-borrows-usd').html('$' + MARKET_BSC.markets.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+            let tadSupply = Math.round(((MARKET_BSC.cToken.tad.totalSupplyVal.inUSD/MARKET_BSC.markets.totalSupplyVal.inUSD)*100));
+            let tadBorrows = Math.round(((MARKET_BSC.cToken.tad.totalBorrowsVal.inUSD/MARKET_BSC.markets.totalBorrowsVal.inUSD)*100));
+            let usdtSupply = Math.round(((MARKET_BSC.cToken.usdt.totalSupplyVal.inUSD/MARKET_BSC.markets.totalSupplyVal.inUSD)*100));
+            let usdtBorrows = Math.round(((MARKET_BSC.cToken.usdt.totalBorrowsVal.inUSD/MARKET_BSC.markets.totalBorrowsVal.inUSD)*100));
+            let bnbSupply = Math.round(((MARKET_BSC.cToken.bnb.totalSupplyVal.inUSD/MARKET_BSC.markets.totalSupplyVal.inUSD)*100));
+            let bnbBorrows = Math.round(((MARKET_BSC.cToken.bnb.totalBorrowsVal.inUSD/MARKET_BSC.markets.totalBorrowsVal.inUSD)*100));
 
-            $('.usd-supply-tad').html('TAD ($' + MARKETS.cToken.tad.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
-            $('.usd-supply-usdt').html('USDT ($' + MARKETS.cToken.usdt.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
-            $('.usd-supply-bnb').html('BNB ($' + MARKETS.cToken.bnb.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
-            $('.usd-borrows-tad').html('TAD ($' + MARKETS.cToken.tad.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
-            $('.usd-borrows-usdt').html('USDT ($' + MARKETS.cToken.usdt.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
-            $('.usd-borrows-bnb').html('BNB ($' + MARKETS.cToken.bnb.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-supply-tad').html('TAD ($' + MARKET_BSC.cToken.tad.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-supply-usdt').html('USDT ($' + MARKET_BSC.cToken.usdt.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-supply-bnb').html('BNB ($' + MARKET_BSC.cToken.bnb.totalSupplyVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-borrows-tad').html('TAD ($' + MARKET_BSC.cToken.tad.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-borrows-usdt').html('USDT ($' + MARKET_BSC.cToken.usdt.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
+            $('.usd-borrows-bnb').html('BNB ($' + MARKET_BSC.cToken.bnb.totalBorrowsVal.inUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,') + ')');
 
             $('.percent-supply-tad').html(tadSupply + '%');
             $('.percent-supply-usdt').html(usdtSupply + '%');
@@ -215,48 +197,6 @@ var syncMarkets = async function () {
             $('.progress-borrows-bnb').attr('style', 'width: '+bnbBorrows+'%;');
 
             $('.loading-progress-markets').hide();
-        }
-    });
-}
-
-var getTLV = async function () {
-    ENV = _MAINNET_ENV;
-    var i = 0;
-    Object.values(ENV.cTokens).forEach(async function (cToken, index) {
-        var getCash = await cToken.contract.methods.getCash().call();
-        var totalBorrows = await cToken.contract.methods.totalBorrows().call();
-        var totalReserves = await cToken.contract.methods.totalReserves().call();
-
-        // ===========
-        MARKETS.cToken[cToken.id].getCash = getCash;
-        MARKETS.cToken[cToken.id].totalBorrows = totalBorrows;
-        MARKETS.cToken[cToken.id].totalReserves = totalReserves;
-        MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue = ((getCash/(10**18)) + (totalBorrows/(10**18)) - (totalReserves/(10**18)));
-        MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue = (totalBorrows/(10**18));
-
-        // ===== coingecko api
-        let response = await new Promise(resolve => {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", MARKETS.cToken[cToken.id].coingeckoUrl, true);
-            xhr.onload = function(e) {
-              resolve(JSON.parse(xhr.response));
-            };
-            xhr.onerror = function () {
-              resolve(undefined);
-              console.error("** An error occurred during the XMLHttpRequest");
-            };
-            xhr.send();
-        });
-        MARKETS.cToken[cToken.id].priceUSD = response.market_data.current_price.usd;
-        MARKETS.cToken[cToken.id].totalSupplyVal.inUSD = MARKETS.cToken[cToken.id].totalSupplyVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
-        MARKETS.cToken[cToken.id].totalBorrowsVal.inUSD = MARKETS.cToken[cToken.id].totalBorrowsVal.decimalValue * MARKETS.cToken[cToken.id].priceUSD;
-        MARKETS.markets.totalSupplyVal.inUSD = MARKETS.cToken.tad.totalSupplyVal.inUSD + MARKETS.cToken.usdt.totalSupplyVal.inUSD + MARKETS.cToken.bnb.totalSupplyVal.inUSD;
-        MARKETS.markets.totalBorrowsVal.inUSD = MARKETS.cToken.tad.totalBorrowsVal.inUSD + MARKETS.cToken.usdt.totalBorrowsVal.inUSD + MARKETS.cToken.bnb.totalBorrowsVal.inUSD;
-
-        i++;
-        if(i == 3){
-            let tvl = MARKETS.markets.totalSupplyVal.inUSD + MARKETS.markets.totalBorrowsVal.inUSD;
-            $('.tvl-value').html('$' + tvl.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
         }
     });
 }

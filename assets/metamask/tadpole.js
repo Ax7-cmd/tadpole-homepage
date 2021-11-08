@@ -2,29 +2,29 @@ var BN = web3.utils.BN;
 
 var accountBalance = new Object();
 var accountBorrow = new Object();
-var prices = new Object();	
-var enableCollateral = new Object();	
+var prices = new Object();
+var enableCollateral = new Object();
 var assetsIn;
 var accountLiquidityAvailable;
 const gasLimitStake = 300000;
 const gasLimitApprove = 70000;
 
 var formatter = new Intl.NumberFormat('us-US', {
-  style: 'currency',
-  currency: 'USD',
+    style: 'currency',
+    currency: 'USD',
 });
 
 var _MAINNET_ENV = {
-	"id": 1,
-	"comptrollerAddress": "0x",
-	"oracleAddress": "0x",
-	"tadAddress": "0x9f7229aF0c4b9740e207Ea283b9094983f78ba04",
-	"genesisMiningAddress": "0x8Cb331D8F117a5C914fd0f2579321572A27bf191",
-	"uniswapMiningAddress": "0x0c14e822E43796d955a30b6d974f62031dA845e3",
-	"lpAddress": "0x9D8D4550637e3fc86CB465734Ab33280e4838E08",
-	"uniswapAddress": "0x9D8D4550637e3fc86CB465734Ab33280e4838E08",
-	"etherscan": "https://bscscan.com/",
-	"cTokens": {
+    "id": 1,
+    "comptrollerAddress": "0x",
+    "oracleAddress": "0x",
+    "tadAddress": "0x9f7229aF0c4b9740e207Ea283b9094983f78ba04",
+    "genesisMiningAddress": "0x8Cb331D8F117a5C914fd0f2579321572A27bf191",
+    "uniswapMiningAddress": "0x0c14e822E43796d955a30b6d974f62031dA845e3",
+    "lpAddress": "0x9D8D4550637e3fc86CB465734Ab33280e4838E08",
+    "uniswapAddress": "0x9D8D4550637e3fc86CB465734Ab33280e4838E08",
+    "etherscan": "https://bscscan.com/",
+    "cTokens": {
         "tad": {
             "id": "tad",
             "name": "TAD",
@@ -58,18 +58,18 @@ var _MAINNET_ENV = {
             "address": "0x3f01C2b4A090Fa8BD36e87B78e0d75e37d2d5D90",
             "underlyingAddress": "0x"
         },
-		"ten": {
-			"id": "ten",
-			"name": "TEN",
-			"index": "tokenomy",
-			"unit": "TEN",
-			"logo": "./assets/images/tokens/ten_32.png",
-			"cTokenDecimals": 8,
-			"underlyingDecimals": 18,
-			"address": "0x",
-			"underlyingAddress": "0xDD16eC0F66E54d453e6756713E533355989040E4"
-		}
-	}
+        "ten": {
+            "id": "ten",
+            "name": "TEN",
+            "index": "tokenomy",
+            "unit": "TEN",
+            "logo": "./assets/images/tokens/ten_32.png",
+            "cTokenDecimals": 8,
+            "underlyingDecimals": 18,
+            "address": "0x",
+            "underlyingAddress": "0xDD16eC0F66E54d453e6756713E533355989040E4"
+        }
+    }
 }
 
 var MARKETS = {
@@ -133,49 +133,52 @@ var MARKETS = {
 var ENV = _MAINNET_ENV;
 var OLD_ENVID;
 
-change_environment = function(chainId){
-	if(!chainId) return false;
-    console.log(chainId)
-	init_genesis();
-	return true;
+change_environment = function (chainId) {
+    if (!chainId) return false;
+    console.log(chainId);
+    init_genesis();
+    return true;
 }
 
-var init_genesis = async function(){
-	var genesisCont =  new web3.eth.Contract(genesisMiningAbi, ENV.genesisMiningAddress);
-	
-	var total_stake = await genesisCont.methods.totalStaked().call();
-	var tenTadPrices = await getTenTadPrices();
-	
+var init_genesis = async function () {
+    var genesisCont = new web3.eth.Contract(genesisMiningAbi, ENV.genesisMiningAddress);
+
+    var total_stake = await genesisCont.methods.totalStaked().call();
+    var tenTadPrices = await getTenTadPrices();
+
     console.log(tenTadPrices.TEN);
     console.log(ENV.genesisMiningAddress);
     console.log(total_stake);
-	$('.total-stake').html(web3.utils.fromWei(total_stake));
-	
+    // $('.total-stake').html(web3.utils.fromWei(total_stake));
+
 }
 
-var getTenTadPrices = async function(){
-	let data = await fetch('https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2', {
-	  method: 'POST',
-	  headers: {
-		'Content-Type': 'application/json',
-		'Accept': 'application/json',
-	  },
-	  body: JSON.stringify({query: "{ \
+var getTenTadPrices = async function () {
+    let data = await fetch('https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                query: "{ \
 		  tokens(where: {id_in: [\"0x9f7229af0c4b9740e207ea283b9094983f78ba04\", \"0xdd16ec0f66e54d453e6756713e533355989040e4\"]}) {\
 			id derivedETH symbol\
 			}\
-		  bundle(id: \"1\"){ ethPrice }	  }"})
-	})
-	  .then(r => r.json())
-	  .then(data => {return data;});
-	  
-	  var ethPrice = data.data.bundle.ethPrice;
-	  var tadPrice = data.data.tokens[0].derivedETH * ethPrice;
-	  var tenPrice = data.data.tokens[1].derivedETH * ethPrice;
-	  
-	  return {TAD: tadPrice, TEN: tenPrice};
-}
+		  bundle(id: \"1\"){ ethPrice }	  }"
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            return data;
+        });
 
-$(document).ready(function () {
-    init_genesis();
-});
+    var ethPrice = data.data.bundle.ethPrice;
+    var tadPrice = data.data.tokens[0].derivedETH * ethPrice;
+    var tenPrice = data.data.tokens[1].derivedETH * ethPrice;
+
+    return {
+        TAD: tadPrice,
+        TEN: tenPrice
+    };
+}

@@ -2,7 +2,7 @@ const blocksPerDay = 12 * 60 * 24;
 const daysPerYear = 365;
 const mentissa = 1e18;
 
-var _BSC_ENV_BSC = {
+var ENV_BSC = {
     "id": 1,
     "comptrollerAddress": "0x8Cb331D8F117a5C914fd0f2579321572A27bf191",
     "oracleAddress": "0x2E0490c8fd2b23cB323370bb7958204A23504AaC",
@@ -102,11 +102,9 @@ var MARKET_BSC = {
         },
     },
 };
-var ENV_BSC_BSC = _BSC_ENV_BSC;
 // ----------------------------
 
 var syncCont = function () {
-    ENV_BSC = _BSC_ENV_BSC;
     ENV_BSC.comptrollerContract = new web3BSC.eth.Contract(comptrollerAbi, ENV_BSC.comptrollerAddress);
     ENV_BSC.oracleContract = new web3BSC.eth.Contract(oracleAbi, ENV_BSC.oracleAddress);
 
@@ -117,8 +115,6 @@ var syncCont = function () {
 }
 
 var syncRate = function () {
-    ENV_BSC = _BSC_ENV_BSC;
-
     Object.values(ENV_BSC.cTokens).forEach(async function (cToken, index) {
         var supplyRatePerBlock = await cToken.contract.methods.supplyRatePerBlock().call();
 		var borrowRatePerBlock = await cToken.contract.methods.borrowRatePerBlock().call();
@@ -130,7 +126,6 @@ var syncRate = function () {
 }
 
 var syncMarkets = async function () {
-    ENV_BSC = _BSC_ENV_BSC;
     var i = 0;
 
     Object.values(ENV_BSC.cTokens).forEach(async function (cToken, index) {
@@ -199,6 +194,40 @@ var syncMarkets = async function () {
             $('.loading-progress-markets').hide();
         }
     });
+}
+
+var getTokenTotalSupplyUSD = async function (token) {
+    var getCash = await ENV_BSC.cTokens[token].contract.methods.getCash().call();
+    var totalBorrows = await ENV_BSC.cTokens[token].contract.methods.totalBorrows().call();
+    var totalReserves = await ENV_BSC.cTokens[token].contract.methods.totalReserves().call();
+    MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].totalSupplyVal.decimalValue = ((getCash/(10**18)) + (totalBorrows/(10**18)) - (totalReserves/(10**18)));
+
+    // ===== coingecko api
+    let response = await new Promise(resolve => {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].coingeckoUrl, true);
+        xhr.onload = function(e) {
+          resolve(JSON.parse(xhr.response));
+        };
+        xhr.onerror = function () {
+          resolve(undefined);
+          console.error("** An error occurred during the XMLHttpRequest");
+        };
+        xhr.send();
+    });
+
+    MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].priceUSD = response.market_data.current_price.usd;
+    MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].totalSupplyVal.inUSD = MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].totalSupplyVal.decimalValue * MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].priceUSD;
+    return MARKET_BSC.cToken[ENV_BSC.cTokens[token].id].totalSupplyVal.inUSD;
+}
+
+var getTotalSupplyUSD = async function () {
+    var tadTotalSupplyUSD = await getTokenTotalSupplyUSD('tad');
+    var usdtTotalSupplyUSD = await getTokenTotalSupplyUSD('usdt');
+    var bnbTotalSupplyUSD = await getTokenTotalSupplyUSD('bnb');
+
+    MARKET_BSC.markets.totalSupplyVal.inUSD = tadTotalSupplyUSD + usdtTotalSupplyUSD + bnbTotalSupplyUSD;
+    return tadTotalSupplyUSD + usdtTotalSupplyUSD + bnbTotalSupplyUSD;
 }
 
 $(document).ready(function () {

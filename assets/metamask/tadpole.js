@@ -135,21 +135,24 @@ var OLD_ENVID;
 
 change_environment = function (chainId) {
     if (!chainId) return false;
-    console.log(chainId);
-    init_genesis();
+    getGenesisTotalStakeUSD();
     return true;
 }
 
-var init_genesis = async function () {
+var getGenesisTotalStakeUSD = async function () {
     var genesisCont = new web3.eth.Contract(genesisMiningAbi, ENV.genesisMiningAddress);
 
+    // get total supply USD
+    var totalSupplyUSD = await getTotalSupplyUSD();
+    // get stake ten * USD
     var total_stake = await genesisCont.methods.totalStaked().call();
     var tenTadPrices = await getTenTadPrices();
+    var totalSkateTenUSD = web3.utils.fromWei(total_stake) * tenTadPrices.TEN;
+    syncMarkets();
 
-    console.log(tenTadPrices.TEN);
-    console.log(ENV.genesisMiningAddress);
-    console.log(total_stake);
-    // $('.total-stake').html(web3.utils.fromWei(total_stake));
+    console.log(totalSkateTenUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+    console.log('======');
+    console.log(totalSupplyUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 
 }
 

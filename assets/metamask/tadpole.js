@@ -135,28 +135,43 @@ var OLD_ENVID;
 
 change_environment = function (chainId) {
     if (!chainId) return false;
-    getGenesisTotalStakeUSD();
+    getTVL();
     return true;
 }
 
-var getGenesisTotalStakeUSD = async function () {
-    var genesisCont = new web3.eth.Contract(genesisMiningAbi, ENV.genesisMiningAddress);
-
+var getTVL = async function () {
     // get total supply USD
     var totalSupplyUSD = await getTotalSupplyUSD();
     // get stake ten * USD
-    var total_stake = await genesisCont.methods.totalStaked().call();
-    var tenTadPrices = await getTenTadPrices();
-    var totalSkateTenUSD = web3.utils.fromWei(total_stake) * tenTadPrices.TEN;
-    syncMarkets();
+    var totalStakeTenUSD = await getTotalStakeTenUSD();
+    // get total liquidity USD
+    var totalLiquidityUSD = await getTotalLiquidityUSD();
 
-    console.log(totalSkateTenUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-    console.log('======');
     console.log(totalSupplyUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-
+    console.log(totalStakeTenUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+    console.log(totalLiquidityUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
+    $('.tvl-value').html('$' + (totalSupplyUSD + totalStakeTenUSD + totalLiquidityUSD).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 }
 
-var getTenTadPrices = async function () {
+var getTotalStakeTenUSD = async function () {
+    var genesisCont = new web3.eth.Contract(genesisMiningAbi, ENV.genesisMiningAddress);
+    var total_stake = await genesisCont.methods.totalStaked().call();
+    var tenTadPrices = await getEthTenTadPrices();
+
+    return web3.utils.fromWei(total_stake) * tenTadPrices.TEN;
+}
+
+var getTotalLiquidityUSD = async function () {
+    var lpCont = new web3.eth.Contract(tadLpAbi, ENV.lpAddress);
+    var reserves = await lpCont.methods.getReserves().call();
+    var reserveTad = web3.utils.fromWei(reserves._reserve0);
+    var reserveEth = web3.utils.fromWei(reserves._reserve1);
+    var ethTenTadPrices = await getEthTenTadPrices();
+
+    return (reserveEth * ethTenTadPrices.ETH + reserveTad * ethTenTadPrices.TAD);
+}
+
+var getEthTenTadPrices = async function () {
     let data = await fetch('https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2', {
             method: 'POST',
             headers: {
@@ -181,7 +196,14 @@ var getTenTadPrices = async function () {
     var tenPrice = data.data.tokens[1].derivedETH * ethPrice;
 
     return {
+        ETH: ethPrice,
         TAD: tadPrice,
         TEN: tenPrice
     };
 }
+
+$(function () {
+    // setInterval(function () {
+    //     getTVL();
+    // }, 10000);
+});

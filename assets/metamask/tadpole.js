@@ -147,9 +147,6 @@ var getTVL = async function () {
     // get total liquidity USD
     var totalLiquidityUSD = await getTotalLiquidityUSD();
 
-    console.log(totalSupplyUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-    console.log(totalStakeTenUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
-    console.log(totalLiquidityUSD.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
     $('.tvl-value').html('$' + (totalSupplyUSD + totalStakeTenUSD + totalLiquidityUSD).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,'));
 }
 
